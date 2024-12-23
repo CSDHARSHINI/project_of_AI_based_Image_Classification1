@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Classification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            width: 200px;
+            height: 150px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #1a365d;
+            margin: 20px 0;
+            font-size: 2em;
+        }
+
+        .upload-form {
+            text-align: center;
+            padding: 30px;
+            border: 2px dashed #4299e1;
+            border-radius: 10px;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+
+        .upload-form:hover {
+            border-color: #3182ce;
+            background-color: #f7fafc;
+        }
+
+        .file-input-container {
+            margin: 20px 0;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        .submit-btn {
+            background-color: #4299e1;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .submit-btn:hover {
+            background-color: #3182ce;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .error {
+            color: #c53030;
+            background-color: #fff5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            border: 1px solid #feb2b2;
+        }
+
+        .success {
+            color: #2f855a;
+            background-color: #f0fff4;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            border: 1px solid #9ae6b4;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            height: auto;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+            color: #4299e1;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 3px solid #4299e1;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-container">
+            <svg class="logo" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                <!-- Background -->
+                <rect width="400" height="300" fill="#f5f8fa"/>
+                
+                <!-- Camera body -->
+                <rect x="100" y="80" width="200" height="140" rx="15" fill="#2d3748"/>
+                
+                <!-- Camera lens -->
+                <circle cx="200" cy="150" r="50" fill="#4a5568"/>
+                <circle cx="200" cy="150" r="40" fill="#2d3748"/>
+                <circle cx="200" cy="150" r="30" fill="#4a5568"/>
+                
+                <!-- Flash -->
+                <rect x="250" y="100" width="30" height="20" rx="5" fill="#ecc94b"/>
+                
+                <!-- Classification elements -->
+                <rect x="50" y="240" width="300" height="30" rx="5" fill="#4299e1"/>
+                
+                <!-- AI processing lines -->
+                <line x1="320" y1="150" x2="370" y2="150" stroke="#48bb78" stroke-width="3"/>
+                <line x1="320" y1="140" x2="370" y2="140" stroke="#48bb78" stroke-width="3"/>
+                <line x1="320" y1="160" x2="370" y2="160" stroke="#48bb78" stroke-width="3"/>
+                
+                <!-- Text elements -->
+                <text x="200" y="260" text-anchor="middle" fill="white" font-family="Arial" font-size="16">
+                    Image Classification
+                </text>
+            </svg>
+        </div>
+        <h1>AI Image Classification</h1>
+    </div>
+
+    <div class="container">
+        <div class="upload-form">
+            <form id="uploadForm">
+                <div class="file-input-container">
+                    <input type="file" name="file" accept=".jpg,.jpeg,.png" required>
+                </div>
+                <button type="submit" class="submit-btn">Analyze Image</button>
+            </form>
+        </div>
+
+        <div id="loading" class="loading">
+            Analyzing image... Please wait...
+        </div>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+            
+            // Show loading
+            loadingDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                // Hide loading
+                loadingDiv.style.display = 'none';
+                resultDiv.style.display = 'block';
+                
+                if (response.ok && data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h3>Analysis Results:</h3>
+                            <p><strong>Description:</strong> ${data.description}</p>
+                            <p><strong>Confidence:</strong> ${data.confidence}</p>
+                        </div>
+                        <img src="${data.image_path}" alt="Analyzed Image" class="preview-image">
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            Error: ${data.error || 'Failed to process image'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        Error: Unable to process image. Please try again.
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
