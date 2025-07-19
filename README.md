@@ -1,1 +1,1 @@
-# AROGO-AI
+# AI Image Classification
